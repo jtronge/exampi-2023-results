@@ -1,0 +1,11 @@
+# OSU MPI Latency Test v7.1
+# Size          Latency (us)
+# Datatype: MPI_CHAR.
+2                       0.74
+4                       0.75
+8                       0.75
+16                      0.75
+32                      0.72
+64                      0.77
+128                     0.73
+256                     0.76

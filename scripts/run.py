@@ -52,13 +52,13 @@ for test_name in to_run:
     extra_args = benchmarks[test_name]
     print('Running', test_name)
     for version, env in versions.items():
-        print('Testing version', version)
+        print('=> Testing version', version)
         run_env = dict(os.environ)
         run_env.update(env)
         bin_path = os.path.join(omb_path, test_name)
         argv = ['mpirun', '-np', '2', bin_path]
         argv.extend(extra_args)
-        print('Running', args.count, 'tests with args', argv)
+        print('==> Running', args.count, 'test(s) with args', argv)
         for run in range(args.count):
             out_file = os.path.join(args.results_path, filename(test_name, run, version))
             with open(out_file, 'w', encoding='utf-8') as fp:
