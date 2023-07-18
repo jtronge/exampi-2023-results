@@ -1,0 +1,14 @@
+# OSU MPI Multiple Bandwidth / Message Rate Test v7.2
+# OSU MPI Multiple Bandwidth / Message Rate Test v7.2
+
+# [ pairs: 1 ] [ window size: 64 ]
+# Size                  MB/s        Messages/s
+# Datatype: MPI_CHAR.
+2                       9.34        4668620.49
+4                      18.85        4712566.97
+8                      37.79        4724078.32
+16                     76.40        4774970.52
+32                    152.55        4767210.50
+64                    293.82        4590944.35
+128                   555.98        4343592.85
+256                  1089.04        4254052.61

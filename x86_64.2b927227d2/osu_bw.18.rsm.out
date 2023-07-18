@@ -1,0 +1,11 @@
+# OSU MPI Bandwidth Test v7.2
+# Size      Bandwidth (MB/s)
+# Datatype: MPI_CHAR.
+2                      10.89
+4                      22.01
+8                      44.03
+16                     88.30
+32                    175.88
+64                    345.93
+128                   679.17
+256                  1351.39
