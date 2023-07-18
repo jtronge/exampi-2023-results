@@ -11,9 +11,7 @@ rsm_fmt = 'r--'
 
 parser = argparse.ArgumentParser(description='generate graphs for results')
 parser.add_argument('-r', '--results-path', required=True, help='path to results dir')
-parser.add_argument('-b', '--benchmark', required=True, choices=benchmarks, help='benchmark name')
 parser.add_argument('-c', '--count', required=True, type=int, help='number of runs')
-parser.add_argument('-g', '--graph', required=True, choices=graph_types, help='graph type')
 parser.add_argument('-t', '--title', required=True, help='title')
 args = parser.parse_args()
 
@@ -59,10 +57,17 @@ for run in range(args.count):
     sm_mrs.append(sm_mr)
     rsm_bws.append(rsm_bw)
     rsm_mrs.append(rsm_mr)
+# Average the results
 sm_bw = np.average(np.array(sm_bws), 0)
 rsm_bw = np.average(np.array(rsm_bws), 0)
 sm_mr = np.average(np.array(sm_mrs), 0)
 rsm_mr = np.average(np.array(rsm_mrs), 0)
+
+# Compute overhead
+bw_overhead = 100 * ((sm_bw - rsm_bw) / sm_bw)
+print('bandwidth overhead:', np.average(bw_overhead, 0))
+mr_overhead = 100 * ((sm_mr - rsm_mr) / sm_mr)
+print('mr overhead:', np.average(mr_overhead, 0))
 
 fig, (ax0, ax1) = plt.subplots(2)
 ax0.plot(sm_size, sm_bw, sm_fmt, label='sm')
@@ -77,7 +82,7 @@ ax1.plot(rsm_size, rsm_mr, rsm_fmt, label='rsm')
 ax1.legend()
 ax1.set_ylabel('Messages/s')
 ax1.set_xlabel('Size (bytes)')
-ax1.set_ylim(ymin=1.0e6, ymax=4.0e6)
+# ax1.set_ylim(ymin=1.0e6, ymax=4.0e6)
 # ax1.set_title(f'osu_mbw_mr - {args.title}')
 plt.show()
 
@@ -91,9 +96,11 @@ for run in range(args.count):
     sizes = sm_size
     sm_lats.append(sm_lat)
     rsm_lats.append(rsm_lat)
-print(sm_lats)
 sm_lats = np.average(np.array(sm_lats), 0)
 rsm_lats = np.average(np.array(rsm_lats), 0)
+
+lat_overhead = 100 * ((rsm_lats - sm_lats) / rsm_lats)
+print('latency overhead:', np.average(lat_overhead))
 
 fig, ax = plt.subplots()
 ax.plot(sizes, sm_lats, sm_fmt, label='sm')
@@ -102,5 +109,5 @@ ax.legend()
 ax.set_xlabel('Size (bytes)')
 ax.set_ylabel('Latency (μs)')
 ax.set_title(f'osu_latency - {args.title}')
-ax.set_ylim(ymin=0.0, ymax=1.0)
+# ax.set_ylim(ymin=0.0, ymax=1.0)
 plt.show()
