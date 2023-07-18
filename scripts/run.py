@@ -7,9 +7,9 @@ import sys
 
 # Benchmarks with args to pass
 benchmarks = {
-    'osu_latency': '-m 2:256 -i 16384'.split(),
-    'osu_mbw_mr': '-m 2:256 -i 16384'.split(),
-    'osu_bw': '-m 2:256 -i 16384'.split(),
+    'osu_latency': '-i 1000'.split(),
+    'osu_mbw_mr': '-i 1000'.split(),
+    'osu_bw': '-i 1000'.split(),
 }
 # Test versions run with the environment
 versions = {
