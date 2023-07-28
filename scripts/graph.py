@@ -69,6 +69,9 @@ print('bandwidth overhead:', np.average(bw_overhead, 0))
 mr_overhead = 100 * ((sm_mr - rsm_mr) / sm_mr)
 print('mr overhead:', np.average(mr_overhead, 0))
 
+# Set plot style
+plt.style.use('./paper.mplstyle')
+
 fig, (ax0, ax1) = plt.subplots(2)
 ax0.plot(sm_size, sm_bw, sm_fmt, label='sm')
 ax0.plot(rsm_size, rsm_bw, rsm_fmt, label='rsm')
@@ -93,9 +96,9 @@ for run in range(args.count):
     sm_size, sm_lat = parse_osu_latency_output(f'{args.results_path}/osu_latency.{run}.sm.out')
     rsm_size, rsm_lat = parse_osu_latency_output(f'{args.results_path}/osu_latency.{run}.rsm.out')
 
-    sizes = sm_size
-    sm_lats.append(sm_lat)
-    rsm_lats.append(rsm_lat)
+    sizes = sm_size[:16]
+    sm_lats.append(sm_lat[:16])
+    rsm_lats.append(rsm_lat[:16])
 sm_lats = np.average(np.array(sm_lats), 0)
 rsm_lats = np.average(np.array(rsm_lats), 0)
 

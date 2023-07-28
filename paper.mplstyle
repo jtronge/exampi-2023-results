@@ -1,0 +1,4 @@
+font.size: 14.0
+axes.linewidth: 2
+lines.linewidth: 3
+axes.titleweight: bold
