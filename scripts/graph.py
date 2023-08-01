@@ -12,7 +12,6 @@ rsm_fmt = 'r--'
 parser = argparse.ArgumentParser(description='generate graphs for results')
 parser.add_argument('-r', '--results-path', required=True, help='path to results dir')
 parser.add_argument('-c', '--count', required=True, type=int, help='number of runs')
-parser.add_argument('-t', '--title', required=True, help='title')
 args = parser.parse_args()
 
 def parse_osu_latency_output(fname):
@@ -24,7 +23,7 @@ def parse_osu_latency_output(fname):
             if line.startswith('#') or not line.strip():
                 continue
             size, latency = line.split()
-            sizes.append(size)
+            sizes.append(int(size))
             latencies.append(float(latency))
     return sizes, latencies
 
@@ -38,10 +37,18 @@ def parse_osu_mbw_mr_output(fname):
             if line.startswith('#') or not line.strip():
                 continue
             size, bw, mr = line.split()
-            sizes.append(size)
+            sizes.append(int(size))
             bandwidth.append(float(bw))
             message_rate.append(float(mr))
     return sizes, bandwidth, message_rate
+
+def compute_error(results):
+    """Compute the average and error."""
+    result = np.average(results, 0)
+    max_result = np.amax(results, axis=0)
+    min_result = np.amin(results, axis=0)
+    error = [result - min_result, max_result - result]
+    return result, error
 
 sizes = None
 sm_bws = []
@@ -57,11 +64,22 @@ for run in range(args.count):
     sm_mrs.append(sm_mr)
     rsm_bws.append(rsm_bw)
     rsm_mrs.append(rsm_mr)
+sm_bws = np.array(sm_bws)
+rsm_bws = np.array(rsm_bws)
+sm_mrs = np.array(sm_mrs)
+rsm_mrs = np.array(rsm_mrs)
+
 # Average the results
-sm_bw = np.average(np.array(sm_bws), 0)
-rsm_bw = np.average(np.array(rsm_bws), 0)
-sm_mr = np.average(np.array(sm_mrs), 0)
-rsm_mr = np.average(np.array(rsm_mrs), 0)
+sm_bw = np.average(sm_bws, 0)
+rsm_bw = np.average(rsm_bws, 0)
+sm_mr = np.average(sm_mrs, 0)
+rsm_mr = np.average(rsm_mrs, 0)
+
+# Compute errorbar values
+sm_bw, sm_bw_err = compute_error(sm_bws)
+rsm_bw, rsm_bw_err = compute_error(rsm_bws)
+sm_mr, sm_mr_err = compute_error(sm_mrs)
+rsm_mr, rsm_mr_err = compute_error(rsm_mrs)
 
 # Compute overhead
 bw_overhead = 100 * ((sm_bw - rsm_bw) / sm_bw)
@@ -72,21 +90,26 @@ print('mr overhead:', np.average(mr_overhead, 0))
 # Set plot style
 plt.style.use('./paper.mplstyle')
 
-fig, (ax0, ax1) = plt.subplots(2)
-ax0.plot(sm_size, sm_bw, sm_fmt, label='sm')
-ax0.plot(rsm_size, rsm_bw, rsm_fmt, label='rsm')
-ax0.legend()
-ax0.set_ylabel('Bandwidth (MB/s)')
-ax0.set_xlabel('Size (bytes)')
-ax0.set_title(f'osu_mbw_mr - {args.title}')
+fig, ax = plt.subplots()
+# print(sm_size, sm_bw)
+ax.errorbar(sizes, sm_bw, yerr=sm_bw_err, fmt=sm_fmt, label='sm')
+ax.errorbar(sizes, rsm_bw, yerr=rsm_bw_err, fmt=rsm_fmt, label='rsm')
+ax.legend()
+ax.set_ylabel('Bandwidth (MB/s)')
+ax.set_xlabel('Size (bytes)')
+ax.set_title(f'Bandwidth (osu_mbw_mr)')
+ax.set_xscale('log', base=2)
+ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
+plt.show()
 
-ax1.plot(sm_size, sm_mr, sm_fmt, label='sm')
-ax1.plot(rsm_size, rsm_mr, rsm_fmt, label='rsm')
-ax1.legend()
-ax1.set_ylabel('Messages/s')
-ax1.set_xlabel('Size (bytes)')
-# ax1.set_ylim(ymin=1.0e6, ymax=4.0e6)
-# ax1.set_title(f'osu_mbw_mr - {args.title}')
+fig, ax = plt.subplots()
+ax.errorbar(sizes, sm_mr, yerr=sm_mr_err, fmt=sm_fmt, label='sm')
+ax.errorbar(sizes, rsm_mr, yerr=rsm_mr_err, fmt=rsm_fmt, label='rsm')
+ax.legend()
+ax.set_title(f'Message Rate (osu_mbw_mr)')
+ax.set_ylabel('Messages/s')
+ax.set_xlabel('Size (bytes)')
+ax.set_xscale('log', base=2)
 plt.show()
 
 sizes = None
@@ -99,18 +122,18 @@ for run in range(args.count):
     sizes = sm_size[:16]
     sm_lats.append(sm_lat[:16])
     rsm_lats.append(rsm_lat[:16])
-sm_lats = np.average(np.array(sm_lats), 0)
-rsm_lats = np.average(np.array(rsm_lats), 0)
+sm_lat, sm_lat_err = compute_error(sm_lats)
+rsm_lat, rsm_lat_err = compute_error(rsm_lats)
 
-lat_overhead = 100 * ((rsm_lats - sm_lats) / rsm_lats)
+lat_overhead = 100 * ((rsm_lat - sm_lat) / rsm_lat)
 print('latency overhead:', np.average(lat_overhead))
 
 fig, ax = plt.subplots()
-ax.plot(sizes, sm_lats, sm_fmt, label='sm')
-ax.plot(sizes, rsm_lats, rsm_fmt, label='rsm')
+ax.errorbar(sizes, sm_lat, yerr=sm_lat_err, fmt=sm_fmt, label='sm')
+ax.errorbar(sizes, rsm_lat, yerr=rsm_lat_err, fmt=rsm_fmt, label='rsm')
 ax.legend()
 ax.set_xlabel('Size (bytes)')
 ax.set_ylabel('Latency (μs)')
-ax.set_title(f'osu_latency - {args.title}')
-# ax.set_ylim(ymin=0.0, ymax=1.0)
+ax.set_title(f'Latency (osu_latency)')
+ax.set_xscale('log', base=2)
 plt.show()
