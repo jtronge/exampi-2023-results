@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Plot results from a specific run."""
 import matplotlib.pyplot as plt
 import argparse

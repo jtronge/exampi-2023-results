@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Benchmark run script."""
 import argparse
 import os
@@ -25,13 +26,21 @@ versions = {
 }
 
 def filename(test_name, run, version):
-    return f'{test_name}.{run}.{version}.out'
+    return f'{test_name}.{run}.{version}'
 
 parser = argparse.ArgumentParser(description='benchmark runner')
-parser.add_argument('-o', '--omb-path', required=True, help='path to OMB benchmarks build')
-parser.add_argument('-c', '--count', required=True, type=int, help='number of runs to do')
-parser.add_argument('-r', '--results-path', required=True, help='path to results dir')
+parser.add_argument('-o', '--omb-path', required=True,
+                    help='path to OMB benchmarks build')
+parser.add_argument('-c', '--count', required=True, type=int,
+                    help='number of runs to do')
+parser.add_argument('-r', '--results-path', required=True,
+                    help='path to results dir')
 parser.add_argument('-b', '--benchmarks', default=None, help='benchmarks to run')
+# It would perhaps be better to have a separate command for flamegraph, but
+# this will do for now
+parser.add_argument('-f', '--flamegraph', action='store_true',
+                    help='generate flamegraph')
+parser.add_argument('--rank', default=0, help='rank to run flamegraph test on')
 args = parser.parse_args()
 
 if args.benchmarks is None:
@@ -56,10 +65,19 @@ for test_name in to_run:
         run_env = dict(os.environ)
         run_env.update(env)
         bin_path = os.path.join(omb_path, test_name)
-        argv = ['mpirun', '-np', '2', bin_path]
+        argv = ['mpirun', '-np', '2']
+        if args.flamegraph:
+            argv.append('./scripts/flamegraph')
+        argv.append(bin_path)
         argv.extend(extra_args)
         print('==> Running', args.count, 'test(s) with args', argv)
         for run in range(args.count):
-            out_file = os.path.join(args.results_path, filename(test_name, run, version))
+            fname = filename(test_name, run, version)
+            out_file = os.path.join(args.results_path, f'{fname}.out')
+            flamegraph_fname = os.path.join(args.results_path, f'{fname}.svg')
+            final_env = dict(run_env)
+            final_env['FLAMEGRAPH_FNAME'] = str(flamegraph_fname)
+            final_env['FLAMEGRAPH_RANK'] = str(args.rank)
             with open(out_file, 'w', encoding='utf-8') as fp:
-                subprocess.run(argv, env=run_env, stdout=fp)
+                print(argv)
+                subprocess.run(argv, env=final_env, stdout=fp)
