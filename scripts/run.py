@@ -6,13 +6,13 @@ import shutil
 import subprocess
 import sys
 
-# Benchmarks with args to pass
+# Specific benchmark arguments
 benchmarks = {
     'osu_latency': '-i 1000'.split(),
     'osu_mbw_mr': '-i 1000'.split(),
     'osu_bw': '-i 1000'.split(),
 }
-# Test versions run with the environment
+# Environments for each test version
 versions = {
     'sm': {
         'OMPI_MCA_pml': 'ob1',
